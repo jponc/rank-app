@@ -5,7 +5,7 @@ type QueryInfo struct {
 	URL   string `json:"url"`
 }
 
-type QueryOrganicResult struct {
+type ResultItem struct {
 	Position    int    `json:"position"`
 	Title       string `json:"title"`
 	URL         string `json:"url"`
@@ -13,6 +13,6 @@ type QueryOrganicResult struct {
 }
 
 type QueryResult struct {
-	Query          QueryInfo            `json:"query"`
-	OrganicResults []QueryOrganicResult `json:"organic"`
+	Query      QueryInfo    `json:"query"`
+	ResulItems []ResultItem `json:"organic"`
 }
