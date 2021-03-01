@@ -5,16 +5,51 @@ provider:
   runtime: go1.x
   profile: uptactics
   memorySize: 128
-  region: ap-southeast-2
+  region: us-east-1 # US East 1 (N. Virginia)
   stage: ${opt:stage, 'staging'}
   lambdaHashingVersion: "20201221"
   apiGateway:
     shouldStartNameWithService: true
+  tracing:
+    apiGateway: true
+    lambda: true
+  iamRoleStatements:
+    - Effect: "Allow"
+      Resource: "*"
+      Action:
+        - "sns:*"
+        - xray:PutTraceSegments
+        - xray:PutTelemetryRecords
 
 functions:
+  # == HTTP ==
   SayHello:
     handler: bin/SayHello
     events:
       - http:
           path: /hello
           method: post
+
+  # == HTTP ==
+
+  # == SNS ==
+  RunCrawl:
+    handler: bin/RunCrawl
+    events:
+      - sns: ${self:service}-${self:provider.stage}-RunCrawl
+    environment: ${self:custom.env.rankingsService}
+
+  ProcessKeyword:
+    handler: bin/ProcessKeyword
+    events:
+      - sns: ${self:service}-${self:provider.stage}-ProcessKeyword
+    environment: ${self:custom.env.rankingsService}
+
+  # == SNS ==
+
+custom:
+  env:
+    rankingsService:
+      ZENSERP_API_KEY: ${ssm:/${self:service}/${self:provider.stage}/ZENSERP_API_KEY~true}
+      SNS_PREFIX: !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${self:service}-${self:provider.stage}'
+

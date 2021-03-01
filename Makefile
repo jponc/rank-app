@@ -3,7 +3,7 @@
 CMD_DIR = ./cmd
 
 build:
-	@for f in $(shell ls ${CMD_DIR}); do echo Building $${f} && env GOOS=linux go build -ldflags="-s -w" -o bin/$${f} cmd/$${f}/main.go; done
+	@for f in $(shell ls ${CMD_DIR}); do echo Building $${f} && env GOOS=linux go build -ldflags="-s -w" -o bin/$${f} cmd/$${f}/*.go; done
 
 clean:
 	rm -rf ./bin

@@ -7,3 +7,8 @@ type SayHelloRequest struct {
 type SayHelloResponse struct {
 	Message string `json:"message"`
 }
+
+type ProcessKeywordMessage struct {
+	Keyword string `json:"keyword"`
+	Count   int    `json:"count"`
+}

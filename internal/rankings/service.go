@@ -1,43 +1,31 @@
 package rankings
 
 import (
-	"encoding/json"
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/jponc/rank-app/api"
 	"github.com/jponc/rank-app/pkg/lambdaresponses"
+	"github.com/jponc/rank-app/pkg/sns"
+	"github.com/jponc/rank-app/pkg/zenserp"
 )
 
 // Service interface implements functions available for this service
 type Service interface {
-	SayHello(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error)
+	RunCrawl(ctx context.Context, snsEvent events.SNSEvent)
+	ProcessKeyword(ctx context.Context, snsEvent events.SNSEvent)
 }
 
 type service struct {
-	responses lambdaresponses.Responses
+	responses     lambdaresponses.Responses
+	zenserpClient zenserp.Client
+	snsClient     sns.Client
 }
 
 // NewService instantiates a new service
-func NewService(responses lambdaresponses.Responses) Service {
+func NewService(responses lambdaresponses.Responses, zenserpClient zenserp.Client, snsClient sns.Client) Service {
 	return &service{
-		responses: responses,
+		responses:     responses,
+		zenserpClient: zenserpClient,
+		snsClient:     snsClient,
 	}
-}
-
-// SaysHello says hello
-func (s *service) SayHello(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
-	req := &api.SayHelloRequest{}
-
-	err := json.Unmarshal([]byte(request.Body), req)
-	if err != nil {
-		return s.responses.Respond400(fmt.Errorf("Failed to unmarshall body"))
-	}
-
-	if req.Name == "Waldo" {
-		return s.responses.Respond400(fmt.Errorf("Cannot use name Waldo!"))
-	}
-
-	message := fmt.Sprintf("Hello %s", req.Name)
-	return s.responses.Respond200(api.SayHelloResponse{Message: message})
 }
