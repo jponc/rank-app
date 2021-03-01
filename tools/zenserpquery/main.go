@@ -14,29 +14,28 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func fetchResults(ctx context.Context, client zenserp.Client, keyword string, chResults chan Result, wg *sync.WaitGroup) {
+func fetchResults(ctx context.Context, client zenserp.Client, keyword string, chResults chan result) {
 	defer func() {
 		fmt.Printf("Finished %s\n", keyword)
-		wg.Done()
 	}()
 
 	res, err := client.Search(ctx, keyword, 100)
 	if err != nil {
-		chResults <- Result{
+		chResults <- result{
 			Keyword: keyword,
 			Err:     err,
 		}
 		return
 	}
 
-	chResults <- Result{
+	chResults <- result{
 		Keyword:       keyword,
 		ZenserpResult: res,
 	}
 	return
 }
 
-type Result struct {
+type result struct {
 	Keyword       string
 	ZenserpResult *zenserp.QueryResult
 	Err           error
@@ -45,12 +44,20 @@ type Result struct {
 func main() {
 	startTime := time.Now()
 	ctx := context.Background()
-	keywords := sampleKeywords
-	file := "results.csv"
 
 	var wg sync.WaitGroup
 
-	chResults := make(chan Result, len(keywords))
+	keywords := []string{
+		"sydney",
+		"craft beers",
+		"gin tonic",
+		"hello world",
+	}
+
+	file := "results.csv"
+
+	workerCount := 2
+	chResults := make(chan result, workerCount)
 
 	f, err := os.Create(file)
 	defer f.Close()
@@ -70,39 +77,55 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	failedKeywords := make([]string, 0)
-
-	for _, keyword := range keywords {
-		wg.Add(1)
-		go fetchResults(ctx, client, keyword, chResults, &wg)
+	finishAllWaitGroups := func() {
+		for workerIdx := 0; workerIdx < workerCount; workerIdx++ {
+			wg.Done()
+		}
 	}
-
-	wg.Wait()
-	fmt.Println("YO")
-	close(chResults)
 
 	records := [][]string{
 		{"keyword", "position", "title", "url", "description"},
 	}
 
-	for res := range chResults {
-		keyword := res.Keyword
+	failedKeywords := make([]string, 0)
+	done := 0
 
-		if res.Err != nil {
-			failedKeywords = append(failedKeywords, keyword)
-		} else {
-			zRes := res.ZenserpResult
-			for _, resultItem := range zRes.ResulItems {
-				records = append(records, []string{
-					keyword,
-					strconv.Itoa(resultItem.Position),
-					resultItem.Title,
-					resultItem.URL,
-					resultItem.Description,
-				})
+	for workerIdx := 0; workerIdx < workerCount; workerIdx++ {
+		wg.Add(1)
+		go func(workerIdx int) {
+			for res := range chResults {
+				keyword := res.Keyword
+				fmt.Printf("Worker %d processed %s", workerIdx, keyword)
+
+				if res.Err != nil {
+					failedKeywords = append(failedKeywords, keyword)
+				} else {
+					zRes := res.ZenserpResult
+					for _, resultItem := range zRes.ResulItems {
+						records = append(records, []string{
+							keyword,
+							strconv.Itoa(resultItem.Position),
+							resultItem.Title,
+							resultItem.URL,
+							resultItem.Description,
+						})
+					}
+				}
+
+				done++
+				if done == len(keywords) {
+					finishAllWaitGroups()
+				}
 			}
-		}
+		}(workerIdx)
 	}
+
+	for _, keyword := range keywords {
+		go fetchResults(ctx, client, keyword, chResults)
+	}
+
+	wg.Wait()
+	close(chResults)
 
 	w := csv.NewWriter(f)
 	err = w.WriteAll(records)
