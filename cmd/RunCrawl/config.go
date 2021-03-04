@@ -7,18 +7,12 @@ import (
 
 // Config holds all configuration related to zenserp
 type Config struct {
-	ZenserpApiKey string
-	AWSRegion     string
-	SNSPrefix     string
+	AWSRegion string
+	SNSPrefix string
 }
 
 // NewConfig initialises a new config
 func NewConfig() (*Config, error) {
-	zenserpApiKey, err := getEnv("ZENSERP_API_KEY")
-	if err != nil {
-		return nil, err
-	}
-
 	snsPrefix, err := getEnv("SNS_PREFIX")
 	if err != nil {
 		return nil, err
@@ -30,9 +24,8 @@ func NewConfig() (*Config, error) {
 	}
 
 	return &Config{
-		ZenserpApiKey: zenserpApiKey,
-		AWSRegion:     awsRegion,
-		SNSPrefix:     snsPrefix,
+		AWSRegion: awsRegion,
+		SNSPrefix: snsPrefix,
 	}, nil
 }
 

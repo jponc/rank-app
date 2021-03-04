@@ -1,4 +1,4 @@
-package rankings
+package crawler
 
 import (
 	"context"
@@ -6,8 +6,25 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/jponc/rank-app/api"
+	"github.com/jponc/rank-app/pkg/sns"
 	log "github.com/sirupsen/logrus"
 )
+
+// Service interface implements functions available for this service
+type Service interface {
+	RunCrawl(ctx context.Context, snsEvent events.SNSEvent)
+}
+
+type service struct {
+	snsClient sns.Client
+}
+
+// NewService instantiates a new service
+func NewService(snsClient sns.Client) Service {
+	return &service{
+		snsClient: snsClient,
+	}
+}
 
 // RunCrawl runs the crawler
 func (s *service) RunCrawl(ctx context.Context, snsEvent events.SNSEvent) {
@@ -15,17 +32,18 @@ func (s *service) RunCrawl(ctx context.Context, snsEvent events.SNSEvent) {
 
 	keywords := []string{
 		"craft beers",
-		"beers",
-		"gin",
-		"whisky",
-		"rum",
 	}
 
 	var allErr error
 
 	// TODO Convert ot use goroutines, waitgroups, and channels
 	for _, keyword := range keywords {
-		msg := api.ProcessKeywordMessage{Keyword: keyword, Count: 100}
+		msg := api.ProcessKeywordMessage{
+			Keyword:      keyword,
+			Device:       "desktop",
+			SearchEngine: "google.com",
+			Count:        100,
+		}
 		err := s.snsClient.Publish("ProcessKeyword", msg)
 
 		if err != nil {

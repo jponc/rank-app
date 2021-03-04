@@ -9,7 +9,7 @@ import (
 type Config struct {
 	ZenserpApiKey string
 	AWSRegion     string
-	SNSPrefix     string
+	DBTableName   string
 }
 
 // NewConfig initialises a new config
@@ -19,12 +19,12 @@ func NewConfig() (*Config, error) {
 		return nil, err
 	}
 
-	snsPrefix, err := getEnv("SNS_PREFIX")
+	awsRegion, err := getEnv("AWS_REGION")
 	if err != nil {
 		return nil, err
 	}
 
-	awsRegion, err := getEnv("AWS_REGION")
+	dbTableName, err := getEnv("DB_TABLE_NAME")
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func NewConfig() (*Config, error) {
 	return &Config{
 		ZenserpApiKey: zenserpApiKey,
 		AWSRegion:     awsRegion,
-		SNSPrefix:     snsPrefix,
+		DBTableName:   dbTableName,
 	}, nil
 }
 

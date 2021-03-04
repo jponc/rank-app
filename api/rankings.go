@@ -9,6 +9,8 @@ type SayHelloResponse struct {
 }
 
 type ProcessKeywordMessage struct {
-	Keyword string `json:"keyword"`
-	Count   int    `json:"count"`
+	Keyword      string `json:"keyword"`
+	SearchEngine string `json:"searchEngine"`
+	Device       string `json:"device"`
+	Count        int    `json:"count"`
 }

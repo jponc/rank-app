@@ -16,7 +16,7 @@ import (
 
 const (
 	zenserpBaseURL = "https://app.zenserp.com"
-	searchPath     = "api/v2/search?q=%s&num=%d"
+	searchPath     = "api/v2/search?q=%s&num=%d&search_engine=%s&device=%s"
 )
 
 func (c *client) do(ctx context.Context, method string, endpoint string, body []byte, contentType string) ([]byte, error) {

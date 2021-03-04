@@ -23,7 +23,7 @@ func WithHTTPClient(httpClient *http.Client) Option {
 // Client interface
 type Client interface {
 	// Search provides zenserp search functionality
-	Search(ctx context.Context, query string, num int) (*QueryResult, error)
+	Search(ctx context.Context, query, searchEngine, device string, num int) (*QueryResult, error)
 }
 
 type client struct {

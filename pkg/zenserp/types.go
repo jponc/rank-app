@@ -1,8 +1,10 @@
 package zenserp
 
 type QueryInfo struct {
-	Query string `json:"q"`
-	URL   string `json:"url"`
+	Query        string `json:"q"`
+	SearchEngine string `json:"search_engine"`
+	Device       string `json:"device"`
+	URL          string `json:"url"`
 }
 
 type ResultItem struct {
