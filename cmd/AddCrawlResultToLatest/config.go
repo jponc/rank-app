@@ -3,37 +3,29 @@ package main
 import (
 	"fmt"
 	"os"
-	"strings"
 )
 
-// Config
+// Config holds all configuration related to zenserp
 type Config struct {
-	AWSRegion string
-	SNSPrefix string
-	Keywords  []string
+	AWSRegion   string
+	DBTableName string
 }
 
 // NewConfig initialises a new config
 func NewConfig() (*Config, error) {
-	snsPrefix, err := getEnv("SNS_PREFIX")
-	if err != nil {
-		return nil, err
-	}
-
 	awsRegion, err := getEnv("AWS_REGION")
 	if err != nil {
 		return nil, err
 	}
 
-	keywords, err := getEnv("KEYWORDS")
+	dbTableName, err := getEnv("DB_TABLE_NAME")
 	if err != nil {
 		return nil, err
 	}
 
 	return &Config{
-		AWSRegion: awsRegion,
-		SNSPrefix: snsPrefix,
-		Keywords:  strings.Split(keywords, ","),
+		AWSRegion:   awsRegion,
+		DBTableName: dbTableName,
 	}, nil
 }
 

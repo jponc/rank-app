@@ -41,25 +41,36 @@ functions:
     handler: bin/RunCrawl
     events:
       - sns: ${self:service}-${self:provider.stage}-RunCrawl
-    environment: ${self:custom.env.crawlerService}
+    environment:
+      SNS_PREFIX: ${self:custom.env.SNS_PREFIX}
+      KEYWORDS: ${self:custom.env.KEYWORDS}
 
   ProcessKeyword:
     handler: bin/ProcessKeyword
     events:
       - sns: ${self:service}-${self:provider.stage}-ProcessKeyword
-    environment: ${self:custom.env.processorService}
+    timeout: 60 # 1 Minute timeout to fetch data from Zenserp
+    environment:
+      ZENSERP_API_KEY: ${self:custom.env.ZENSERP_API_KEY}
+      DB_TABLE_NAME: ${self:custom.env.DB_TABLE_NAME}
+      SNS_PREFIX: ${self:custom.env.SNS_PREFIX}
+
+  AddCrawlResultToLatest:
+    handler: bin/AddCrawlResultToLatest
+    events:
+      - sns: ${self:service}-${self:provider.stage}-CrawlResultCreated
+    environment:
+      DB_TABLE_NAME: ${self:custom.env.DB_TABLE_NAME}
 
   # == SNS ==
 
 custom:
   tableName: ${self:service}-${self:provider.stage}
   env:
-    crawlerService:
-      SNS_PREFIX: !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${self:service}-${self:provider.stage}'
-    processorService:
-      ZENSERP_API_KEY: ${ssm:/${self:service}/${self:provider.stage}/ZENSERP_API_KEY~true}
-      DB_TABLE_NAME: ${self:custom.tableName}
-
+    SNS_PREFIX: !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${self:service}-${self:provider.stage}'
+    KEYWORDS: ${ssm:/${self:service}/${self:provider.stage}/KEYWORDS}
+    ZENSERP_API_KEY: ${ssm:/${self:service}/${self:provider.stage}/ZENSERP_API_KEY~true}
+    DB_TABLE_NAME: ${self:custom.tableName}
 
 resources:
   Resources:

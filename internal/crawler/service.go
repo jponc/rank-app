@@ -17,12 +17,14 @@ type Service interface {
 
 type service struct {
 	snsClient sns.Client
+	keywords  []string
 }
 
 // NewService instantiates a new service
-func NewService(snsClient sns.Client) Service {
+func NewService(snsClient sns.Client, keywords []string) Service {
 	return &service{
 		snsClient: snsClient,
+		keywords:  keywords,
 	}
 }
 
@@ -30,24 +32,21 @@ func NewService(snsClient sns.Client) Service {
 func (s *service) RunCrawl(ctx context.Context, snsEvent events.SNSEvent) {
 	log.Info("Crawl running")
 
-	keywords := []string{
-		"craft beers",
-	}
-
 	var allErr error
 
 	// TODO Convert ot use goroutines, waitgroups, and channels
-	for _, keyword := range keywords {
+	// TODO Make device and search engine dynamic
+	for _, keyword := range s.keywords {
 		msg := api.ProcessKeywordMessage{
 			Keyword:      keyword,
 			Device:       "desktop",
 			SearchEngine: "google.com",
 			Count:        100,
 		}
-		err := s.snsClient.Publish("ProcessKeyword", msg)
+		err := s.snsClient.Publish(api.ProcessKeyword, msg)
 
 		if err != nil {
-			allErr = fmt.Errorf("%w; Second error", err)
+			allErr = fmt.Errorf("%w; %v", allErr, err)
 		}
 	}
 

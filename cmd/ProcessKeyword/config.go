@@ -5,11 +5,12 @@ import (
 	"os"
 )
 
-// Config holds all configuration related to zenserp
+// Config
 type Config struct {
 	ZenserpApiKey string
 	AWSRegion     string
 	DBTableName   string
+	SNSPrefix     string
 }
 
 // NewConfig initialises a new config
@@ -29,10 +30,16 @@ func NewConfig() (*Config, error) {
 		return nil, err
 	}
 
+	snsPrefix, err := getEnv("SNS_PREFIX")
+	if err != nil {
+		return nil, err
+	}
+
 	return &Config{
 		ZenserpApiKey: zenserpApiKey,
 		AWSRegion:     awsRegion,
 		DBTableName:   dbTableName,
+		SNSPrefix:     snsPrefix,
 	}, nil
 }
 

@@ -58,6 +58,6 @@ func (c *client) Publish(topic string, message interface{}) error {
 		return fmt.Errorf("failed to publish to sns: %v", err)
 	}
 
-	log.Info("successfully processed sns message: (%s) for topic (%s)", result, topic)
+	log.Infof("successfully processed sns message: (%s) for topic (%s)", result, topic)
 	return nil
 }
