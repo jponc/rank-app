@@ -92,8 +92,12 @@ func (s *service) AddCrawlResultToLatest(ctx context.Context, snsEvent events.SN
 		log.Fatalf("repository not defined")
 	}
 
-	err = s.repository.AddCrawlResultToLatest(&crawlResultCreatedMsg.CrawlResult)
+	crawlResult := crawlResultCreatedMsg.CrawlResult
+
+	err = s.repository.AddCrawlResultToLatest(&crawlResult)
 	if err != nil {
 		log.Fatalf("unable to store crawl result to latest: %v", err)
 	}
+
+	log.Infof("latest data for %s %s %s updated", crawlResult.Query, crawlResult.SearchEngine, crawlResult.Device)
 }

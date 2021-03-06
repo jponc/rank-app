@@ -34,17 +34,16 @@ functions:
           path: /hello
           method: post
 
-  # == HTTP ==
-
-  # == SNS ==
+  # == CRON ==
   RunCrawl:
     handler: bin/RunCrawl
     events:
-      - sns: ${self:service}-${self:provider.stage}-RunCrawl
+      - schedule: cron(0 11 * * ? *)
     environment:
       SNS_PREFIX: ${self:custom.env.SNS_PREFIX}
       KEYWORDS: ${self:custom.env.KEYWORDS}
 
+  # == SNS ==
   ProcessKeyword:
     handler: bin/ProcessKeyword
     events:
@@ -61,8 +60,6 @@ functions:
       - sns: ${self:service}-${self:provider.stage}-CrawlResultCreated
     environment:
       DB_TABLE_NAME: ${self:custom.env.DB_TABLE_NAME}
-
-  # == SNS ==
 
 custom:
   tableName: ${self:service}-${self:provider.stage}
