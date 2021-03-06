@@ -18,6 +18,8 @@ type Client interface {
 	PutItem(input *dynamodb.PutItemInput) (*dynamodb.PutItemOutput, error)
 	// BatchWriteItem writes multiple items to dynamodb table
 	BatchWriteItem(input *dynamodb.BatchWriteItemInput) (*dynamodb.BatchWriteItemOutput, error)
+	// Query queries dynamodb based on keys
+	Query(input *dynamodb.QueryInput) (*dynamodb.QueryOutput, error)
 }
 
 type client struct {
@@ -54,6 +56,10 @@ func (c *client) PutItem(input *dynamodb.PutItemInput) (*dynamodb.PutItemOutput,
 
 func (c *client) BatchWriteItem(input *dynamodb.BatchWriteItemInput) (*dynamodb.BatchWriteItemOutput, error) {
 	return c.dynamodbClient.BatchWriteItem(input)
+}
+
+func (c *client) Query(input *dynamodb.QueryInput) (*dynamodb.QueryOutput, error) {
+	return c.dynamodbClient.Query(input)
 }
 
 func (c *client) GetTableName() string {

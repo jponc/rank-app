@@ -34,6 +34,16 @@ functions:
           path: /hello
           method: post
 
+  DownloadCSV:
+    handler: bin/DownloadCSV
+    timeout: 30
+    events:
+      - http:
+          path: /download-csv
+          method: get
+    environment:
+      DB_TABLE_NAME: ${self:custom.env.DB_TABLE_NAME}
+
   # == CRON ==
   RunCrawl:
     handler: bin/RunCrawl
