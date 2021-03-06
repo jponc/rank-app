@@ -24,6 +24,15 @@ provider:
         - "sns:*"
         - xray:PutTraceSegments
         - xray:PutTelemetryRecords
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+        - s3:GetObject
+        - s3:ListBucket
+        - s3:ListBucketVersions
+      Resource:
+        - 'arn:aws:s3:::${self:custom.bucketName}'
+        - 'arn:aws:s3:::${self:custom.bucketName}/*'
 
 functions:
   # == HTTP ==
@@ -73,6 +82,7 @@ functions:
 
 custom:
   tableName: ${self:service}-${self:provider.stage}
+  bucketName: ${self:service}-${self:provider.stage}
   env:
     SNS_PREFIX: !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${self:service}-${self:provider.stage}'
     KEYWORDS: ${ssm:/${self:service}/${self:provider.stage}/KEYWORDS}
@@ -105,4 +115,20 @@ resources:
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL
-
+    Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.bucketName}
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                SSEAlgorithm: AES256
+        VersioningConfiguration:
+          Status: Enabled
+        CorsConfiguration:
+          CorsRules:
+            - AllowedHeaders: ['*']
+              AllowedMethods: [GET, PUT]
+              AllowedOrigins: ['*']
+              Id: CORSRuleId1
+              MaxAge: '3600'

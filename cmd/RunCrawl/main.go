@@ -18,7 +18,7 @@ func main() {
 		log.Fatalf("cannot initialise sns client %v", err)
 	}
 
-	service := crawler.NewService(snsClient, config.Keywords)
+	service := crawler.NewService(snsClient, &config.Keywords)
 
 	lambda.Start(service.RunCrawl)
 }

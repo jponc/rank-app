@@ -12,7 +12,6 @@ import (
 	"github.com/jponc/rank-app/internal/types"
 	"github.com/jponc/rank-app/pkg/dynamodb"
 	"github.com/jponc/rank-app/pkg/zenserp"
-	log "github.com/sirupsen/logrus"
 )
 
 type Repository interface {
@@ -109,39 +108,47 @@ func (r *repository) GetLatestCrawlResults() (*[]types.CrawlResult, error) {
 		return nil, fmt.Errorf("failed to DynamoDB marshal Record, %v", err)
 	}
 
-	input := &awsDynamodb.QueryInput{
-		TableName:              aws.String(r.dynamodbClient.GetTableName()),
-		KeyConditionExpression: aws.String("#pk = :pk and begins_with(#sk, :sk)"),
-		ExpressionAttributeNames: map[string]*string{
-			"#pk": aws.String("PK"),
-			"#sk": aws.String("SK"),
-		},
-		ExpressionAttributeValues: valuesMap,
-	}
-
-	res, err := r.dynamodbClient.Query(input)
-	if err != nil {
-		return nil, fmt.Errorf("failed to query latest crawl results: %v", err)
-	}
-
+	crawlResults := []types.CrawlResult{}
 	type item struct {
 		PK   string
 		SK   string
 		Data types.CrawlResult
 	}
 
-	crawlResults := []types.CrawlResult{}
-	log.Infof("Items length: %d", len(res.Items))
+	var lastEvaluatedKey map[string]*awsDynamodb.AttributeValue
 
-	for _, resItem := range res.Items {
-		i := &item{}
-
-		err = dynamodbattribute.UnmarshalMap(resItem, &i)
-		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal result item %v", err)
+	for ok := true; ok; ok = lastEvaluatedKey != nil {
+		input := &awsDynamodb.QueryInput{
+			TableName:              aws.String(r.dynamodbClient.GetTableName()),
+			KeyConditionExpression: aws.String("#pk = :pk and begins_with(#sk, :sk)"),
+			ExpressionAttributeNames: map[string]*string{
+				"#pk": aws.String("PK"),
+				"#sk": aws.String("SK"),
+			},
+			ExpressionAttributeValues: valuesMap,
 		}
 
-		crawlResults = append(crawlResults, i.Data)
+		if lastEvaluatedKey != nil {
+			input.ExclusiveStartKey = lastEvaluatedKey
+		}
+
+		res, err := r.dynamodbClient.Query(input)
+		if err != nil {
+			return nil, fmt.Errorf("failed to query latest crawl results: %v", err)
+		}
+
+		for _, resItem := range res.Items {
+			i := &item{}
+
+			err = dynamodbattribute.UnmarshalMap(resItem, &i)
+			if err != nil {
+				return nil, fmt.Errorf("failed to unmarshal result item %v", err)
+			}
+
+			crawlResults = append(crawlResults, i.Data)
+		}
+
+		lastEvaluatedKey = res.LastEvaluatedKey
 	}
 
 	return &crawlResults, nil
