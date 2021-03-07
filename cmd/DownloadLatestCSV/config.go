@@ -7,8 +7,8 @@ import (
 
 // Config
 type Config struct {
-	AWSRegion   string
-	DBTableName string
+	AWSRegion    string
+	S3BucketName string
 }
 
 // NewConfig initialises a new config
@@ -18,14 +18,14 @@ func NewConfig() (*Config, error) {
 		return nil, err
 	}
 
-	dbTableName, err := getEnv("DB_TABLE_NAME")
+	s3BucketName, err := getEnv("S3_BUCKET_NAME")
 	if err != nil {
 		return nil, err
 	}
 
 	return &Config{
-		AWSRegion:   awsRegion,
-		DBTableName: dbTableName,
+		AWSRegion:    awsRegion,
+		S3BucketName: s3BucketName,
 	}, nil
 }
 

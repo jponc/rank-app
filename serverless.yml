@@ -43,15 +43,15 @@ functions:
           path: /hello
           method: post
 
-  DownloadCSV:
-    handler: bin/DownloadCSV
+  DownloadLatestCSV:
+    handler: bin/DownloadLatestCSV
     timeout: 30
     events:
       - http:
-          path: /download-csv
+          path: /download-latest-csv
           method: get
     environment:
-      DB_TABLE_NAME: ${self:custom.env.DB_TABLE_NAME}
+      S3_BUCKET_NAME: ${self:custom.env.S3_BUCKET_NAME}
 
   # == CRON ==
   RunCrawl:
@@ -64,6 +64,7 @@ functions:
 
   UpdateLatestCSV:
     handler: bin/UpdateLatestCSV
+    timeout: 120
     events:
       - schedule: cron(0 11 * * ? *)
     environment:
