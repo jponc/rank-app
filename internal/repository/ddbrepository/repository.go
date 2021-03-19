@@ -8,7 +8,6 @@ import (
 	awsDynamodb "github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/gofrs/uuid"
-	"github.com/jponc/rank-app/internal/converter"
 	"github.com/jponc/rank-app/internal/types"
 	"github.com/jponc/rank-app/pkg/dynamodb"
 	"github.com/jponc/rank-app/pkg/zenserp"
@@ -37,7 +36,12 @@ func NewClient(dynamodbClient dynamodb.Client) (Repository, error) {
 }
 
 func (r *repository) CreateCrawlResult(zenserpQueryResult *zenserp.QueryResult) (*types.CrawlResult, error) {
-	crawlResult := converter.ZenserpQueryResultToCrawlResult(zenserpQueryResult)
+	crawlResult := &types.CrawlResult{}
+
+	if err := crawlResult.Unmarshal(zenserpQueryResult); err != nil {
+		return nil, err
+	}
+
 	crawlResult.ID = uuid.Must(uuid.NewV4())
 	crawlResult.CreatedAt = time.Now()
 
