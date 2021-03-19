@@ -14,16 +14,12 @@ provider:
     apiGateway: true
     lambda: true
   iamRoleStatements:
+    # Only allow to a specific dynamo db table
     - Effect: Allow
       Resource: !Sub 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${self:custom.tableName}*'
       Action:
         - "dynamodb:*"
-    - Effect: "Allow"
-      Resource: "*"
-      Action:
-        - "sns:*"
-        - xray:PutTraceSegments
-        - xray:PutTelemetryRecords
+    # S3 iam roles
     - Effect: Allow
       Action:
         - s3:PutObject
@@ -33,6 +29,14 @@ provider:
       Resource:
         - 'arn:aws:s3:::${self:custom.bucketName}'
         - 'arn:aws:s3:::${self:custom.bucketName}/*'
+    # Allow all SNS + Xray + ElasticSearch
+    - Effect: "Allow"
+      Resource: "*"
+      Action:
+        - sns:*
+        - xray:PutTraceSegments
+        - xray:PutTelemetryRecords
+        - es:*
 
 functions:
   # == HTTP ==
@@ -89,15 +93,80 @@ functions:
     environment:
       DB_TABLE_NAME: ${self:custom.env.DB_TABLE_NAME}
 
+  # == ADHOC FUNCTONS ==
+  UpdateResultItemIndexMapping:
+    handler: bin/UpdateResultItemIndexMapping
+    timeout: 60 # 1 Minute timeout
+    environment:
+      ELASTICSEARCH_URL: ${self:custom.env.ELASTICSEARCH_URL}
+
 custom:
   tableName: ${self:service}-${self:provider.stage}
   bucketName: ${self:service}-${self:provider.stage}
+  esName: ${self:service}-${self:provider.stage}
+
   env:
     SNS_PREFIX: !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${self:service}-${self:provider.stage}'
     KEYWORDS: ${ssm:/${self:service}/${self:provider.stage}/KEYWORDS}
     ZENSERP_API_KEY: ${ssm:/${self:service}/${self:provider.stage}/ZENSERP_API_KEY~true}
     DB_TABLE_NAME: ${self:custom.tableName}
     S3_BUCKET_NAME: ${self:custom.bucketName}
+    ELASTICSEARCH_URL:
+      Fn::GetAtt: ["RankElasticsearch", "DomainEndpoint"]
+
+  staging:
+    elasticsearchResource:
+      Type: "AWS::Elasticsearch::Domain"
+      Properties:
+        ElasticsearchVersion: "7.9"
+        DomainName: ${self:custom.esName}
+        ElasticsearchClusterConfig:
+          DedicatedMasterEnabled: false
+          InstanceCount: "1"
+          ZoneAwarenessEnabled: false
+          InstanceType: "t2.small.elasticsearch"
+        EBSOptions:
+          EBSEnabled: true
+          Iops: 0
+          VolumeSize: 10
+          VolumeType: "gp2"
+        AdvancedOptions:
+          rest.action.multi.allow_explicit_index: "true"
+        AccessPolicies:
+          Version: "2012-10-17"
+          Statement:
+            Effect: "Allow"
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:role/${self:service}-${self:provider.stage}-${self:provider.region}-lambdaRole'
+            Action: "es:*"
+            Resource: "*"
+
+  production:
+    elasticsearchResource:
+      Type: "AWS::Elasticsearch::Domain"
+      Properties:
+        ElasticsearchVersion: "7.9"
+        DomainName: ${self:custom.esName}
+        ElasticsearchClusterConfig:
+          DedicatedMasterEnabled: false
+          InstanceCount: "2"
+          ZoneAwarenessEnabled: false
+          InstanceType: "t2.medium.elasticsearch"
+        EBSOptions:
+          EBSEnabled: true
+          Iops: 0
+          VolumeSize: 10
+          VolumeType: "gp2"
+        AdvancedOptions:
+          rest.action.multi.allow_explicit_index: "true"
+        AccessPolicies:
+          Version: "2012-10-17"
+          Statement:
+            Effect: "Allow"
+            Principal:
+              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:role/${self:service}-${self:provider.stage}-${self:provider.region}-lambdaRole'
+            Action: "es:*"
+            Resource: "*"
 
 resources:
   Resources:
@@ -142,3 +211,5 @@ resources:
               AllowedOrigins: ['*']
               Id: CORSRuleId1
               MaxAge: '3600'
+
+    RankElasticsearch: ${self:custom.${self:provider.stage}.elasticsearchResource}

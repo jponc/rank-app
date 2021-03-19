@@ -32,6 +32,7 @@ func NewClient(awsRegion, tableName string) (Client, error) {
 	sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(awsRegion),
 	})
+
 	if err != nil {
 		return nil, fmt.Errorf("cannot create aws session: %v", err)
 	}
