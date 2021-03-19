@@ -4,7 +4,6 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/jponc/rank-app/internal/apiservice"
 	"github.com/jponc/rank-app/internal/s3repository"
-	"github.com/jponc/rank-app/pkg/lambdaresponses"
 	"github.com/jponc/rank-app/pkg/s3"
 	log "github.com/sirupsen/logrus"
 )
@@ -25,7 +24,6 @@ func main() {
 		log.Fatalf("cannot initialise s3repository %v", err)
 	}
 
-	responses := lambdaresponses.NewResponses()
-	service := apiservice.NewService(responses, s3Repository)
+	service := apiservice.NewService(s3Repository)
 	lambda.Start(service.DownloadLatestCSV)
 }

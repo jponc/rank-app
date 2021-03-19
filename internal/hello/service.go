@@ -16,14 +16,11 @@ type Service interface {
 }
 
 type service struct {
-	responses lambdaresponses.Responses
 }
 
 // NewService instantiates a new service
-func NewService(responses lambdaresponses.Responses) Service {
-	return &service{
-		responses: responses,
-	}
+func NewService() Service {
+	return &service{}
 }
 
 func (s *service) SayHello(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
@@ -31,13 +28,13 @@ func (s *service) SayHello(ctx context.Context, request events.APIGatewayProxyRe
 
 	err := json.Unmarshal([]byte(request.Body), req)
 	if err != nil {
-		return s.responses.Respond400(fmt.Errorf("Failed to unmarshall body"))
+		return lambdaresponses.Respond400(fmt.Errorf("failed to unmarshall body"))
 	}
 
 	if req.Name == "Waldo" {
-		return s.responses.Respond400(fmt.Errorf("Cannot use name Waldo!"))
+		return lambdaresponses.Respond400(fmt.Errorf("cannot use name Waldo!"))
 	}
 
 	message := fmt.Sprintf("Hello %s", req.Name)
-	return s.responses.Respond200(api.SayHelloResponse{Message: message})
+	return lambdaresponses.Respond200(api.SayHelloResponse{Message: message})
 }

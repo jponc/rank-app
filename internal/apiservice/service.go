@@ -14,32 +14,25 @@ type Service interface {
 }
 
 type service struct {
-	responses    lambdaresponses.Responses
 	s3repository s3repository.Repository
 }
 
 // NewService instantiates a new service
-func NewService(responses lambdaresponses.Responses, s3repository s3repository.Repository) Service {
+func NewService(s3repository s3repository.Repository) Service {
 	return &service{
-		responses:    responses,
 		s3repository: s3repository,
 	}
 }
 
 func (s *service) DownloadLatestCSV(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	if s.s3repository == nil {
-		return s.responses.Respond500()
+		return lambdaresponses.Respond500()
 	}
 
-	urlStr, err := s.s3repository.GetURLLatestCSV()
+	url, err := s.s3repository.GetURLLatestCSV()
 	if err != nil {
-		return s.responses.Respond500()
+		return lambdaresponses.Respond500()
 	}
 
-	return events.APIGatewayProxyResponse{
-		StatusCode: 302,
-		Headers: map[string]string{
-			"Location": urlStr,
-		},
-	}, nil
+	return lambdaresponses.Respond302(url)
 }
