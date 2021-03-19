@@ -8,8 +8,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/jponc/rank-app/internal/repository"
-	"github.com/jponc/rank-app/internal/s3repository"
+	"github.com/jponc/rank-app/internal/repository/ddbrepository"
+	"github.com/jponc/rank-app/internal/repository/s3repository"
 )
 
 type Service interface {
@@ -17,21 +17,21 @@ type Service interface {
 }
 
 type service struct {
-	repository   repository.Repository
-	s3repository s3repository.Repository
+	ddbrepository ddbrepository.Repository
+	s3repository  s3repository.Repository
 }
 
 // NewService instantiates a new service
-func NewService(s3repository s3repository.Repository, repository repository.Repository) Service {
+func NewService(s3repository s3repository.Repository, ddbrepository ddbrepository.Repository) Service {
 	return &service{
-		s3repository: s3repository,
-		repository:   repository,
+		s3repository:  s3repository,
+		ddbrepository: ddbrepository,
 	}
 }
 
 func (s *service) UploadLatestCSV(ctx context.Context) {
-	if s.repository == nil {
-		log.Fatal("repository not defined")
+	if s.ddbrepository == nil {
+		log.Fatal("ddbrepository not defined")
 	}
 
 	if s.s3repository == nil {
@@ -50,7 +50,7 @@ func (s *service) UploadLatestCSV(ctx context.Context) {
 }
 
 func (s *service) getLatestCsv() (string, error) {
-	crawlResults, err := s.repository.GetLatestCrawlResults()
+	crawlResults, err := s.ddbrepository.GetLatestCrawlResults()
 	if err != nil {
 		return "", err
 	}

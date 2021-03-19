@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-lambda-go/events"
-	"github.com/jponc/rank-app/internal/s3repository"
+	"github.com/jponc/rank-app/internal/repository/s3repository"
 	"github.com/jponc/rank-app/pkg/lambdaresponses"
 )
 

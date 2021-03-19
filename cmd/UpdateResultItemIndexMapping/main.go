@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/jponc/rank-app/internal/esrepository"
+	"github.com/jponc/rank-app/internal/repository/esrepository"
 	"github.com/jponc/rank-app/pkg/elasticsearch"
 	log "github.com/sirupsen/logrus"
 )

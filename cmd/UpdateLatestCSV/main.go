@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/jponc/rank-app/internal/repository"
-	"github.com/jponc/rank-app/internal/s3repository"
+	"github.com/jponc/rank-app/internal/repository/ddbrepository"
+	"github.com/jponc/rank-app/internal/repository/s3repository"
 	"github.com/jponc/rank-app/internal/uploader"
 	"github.com/jponc/rank-app/pkg/dynamodb"
 	"github.com/jponc/rank-app/pkg/s3"
@@ -21,9 +21,9 @@ func main() {
 		log.Fatalf("cannot initialise dynamodb client %v", err)
 	}
 
-	repository, err := repository.NewClient(dynamodbClient)
+	ddbrepository, err := ddbrepository.NewClient(dynamodbClient)
 	if err != nil {
-		log.Fatalf("cannot initialise repository %v", err)
+		log.Fatalf("cannot initialise ddbrepository %v", err)
 	}
 
 	s3Client, err := s3.NewClient(config.AWSRegion)
@@ -36,7 +36,7 @@ func main() {
 		log.Fatalf("cannot initialise s3repository %v", err)
 	}
 
-	service := uploader.NewService(s3Repository, repository)
+	service := uploader.NewService(s3Repository, ddbrepository)
 
 	lambda.Start(service.UploadLatestCSV)
 }

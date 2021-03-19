@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/jponc/rank-app/api"
-	"github.com/jponc/rank-app/internal/repository"
+	"github.com/jponc/rank-app/internal/repository/ddbrepository"
 	"github.com/jponc/rank-app/pkg/sns"
 	"github.com/jponc/rank-app/pkg/zenserp"
 	log "github.com/sirupsen/logrus"
@@ -22,15 +22,15 @@ type Service interface {
 
 type service struct {
 	zenserpClient zenserp.Client
-	repository    repository.Repository
+	ddbrepository ddbrepository.Repository
 	snsClient     sns.Client
 }
 
 // NewService instantiates a new service
-func NewService(zenserpClient zenserp.Client, repository repository.Repository, snsClient sns.Client) Service {
+func NewService(zenserpClient zenserp.Client, ddbrepository ddbrepository.Repository, snsClient sns.Client) Service {
 	return &service{
 		zenserpClient: zenserpClient,
-		repository:    repository,
+		ddbrepository: ddbrepository,
 		snsClient:     snsClient,
 	}
 }
@@ -49,8 +49,8 @@ func (s *service) ProcessKeyword(ctx context.Context, snsEvent events.SNSEvent) 
 		log.Fatalf("zenserpClient not defined")
 	}
 
-	if s.repository == nil {
-		log.Fatalf("repository not defined")
+	if s.ddbrepository == nil {
+		log.Fatalf("ddbrepository not defined")
 	}
 
 	res, err := s.zenserpClient.Search(
@@ -65,7 +65,7 @@ func (s *service) ProcessKeyword(ctx context.Context, snsEvent events.SNSEvent) 
 		log.Fatalf("unable to query data from zenserp using keyword: %s", processKeywordMsg.Keyword)
 	}
 
-	crawlResult, err := s.repository.CreateCrawlResult(res)
+	crawlResult, err := s.ddbrepository.CreateCrawlResult(res)
 	if err != nil {
 		log.Fatalf("unable to create crawl result: %v", err)
 	}
@@ -88,13 +88,13 @@ func (s *service) AddCrawlResultToLatest(ctx context.Context, snsEvent events.SN
 		log.Fatalf("unable to unarmarshal message: %v", err)
 	}
 
-	if s.repository == nil {
-		log.Fatalf("repository not defined")
+	if s.ddbrepository == nil {
+		log.Fatalf("ddbrepository not defined")
 	}
 
 	crawlResult := crawlResultCreatedMsg.CrawlResult
 
-	err = s.repository.AddCrawlResultToLatest(&crawlResult)
+	err = s.ddbrepository.AddCrawlResultToLatest(&crawlResult)
 	if err != nil {
 		log.Fatalf("unable to store crawl result to latest: %v", err)
 	}

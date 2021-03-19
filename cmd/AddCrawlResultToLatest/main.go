@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/jponc/rank-app/internal/processor"
-	"github.com/jponc/rank-app/internal/repository"
+	"github.com/jponc/rank-app/internal/repository/ddbrepository"
 	"github.com/jponc/rank-app/pkg/dynamodb"
 	log "github.com/sirupsen/logrus"
 )
@@ -19,12 +19,12 @@ func main() {
 		log.Fatalf("cannot initialise dynamodb client %v", err)
 	}
 
-	repository, err := repository.NewClient(dynamodbClient)
+	ddbrepository, err := ddbrepository.NewClient(dynamodbClient)
 	if err != nil {
-		log.Fatalf("cannot initialise repository %v", err)
+		log.Fatalf("cannot initialise ddbrepository %v", err)
 	}
 
-	service := processor.NewService(nil, repository, nil)
+	service := processor.NewService(nil, ddbrepository, nil)
 
 	lambda.Start(service.AddCrawlResultToLatest)
 }

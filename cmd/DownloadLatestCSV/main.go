@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/jponc/rank-app/internal/apiservice"
-	"github.com/jponc/rank-app/internal/s3repository"
+	"github.com/jponc/rank-app/internal/repository/s3repository"
 	"github.com/jponc/rank-app/pkg/s3"
 	log "github.com/sirupsen/logrus"
 )
