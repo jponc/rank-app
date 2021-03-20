@@ -10,7 +10,7 @@ import (
 )
 
 func (c *client) UpdateMapping(ctx context.Context, index string, body interface{}) error {
-
+	// NOTE All documents will be gone if we decide to update the mappings
 	bodyByte, err := json.Marshal(body)
 	if err != nil {
 		return fmt.Errorf("indices put mapping cannot marshal body: %v, err: %v", body, err)
@@ -21,10 +21,14 @@ func (c *client) UpdateMapping(ctx context.Context, index string, body interface
 		return err
 	}
 
-	if !*existsPtr {
-		if err = c.CreateIndex(ctx, index); err != nil {
+	if *existsPtr {
+		if err = c.DeleteIndex(ctx, index); err != nil {
 			return fmt.Errorf("can't update mapping: %v", err)
 		}
+	}
+
+	if err = c.CreateIndex(ctx, index); err != nil {
+		return fmt.Errorf("can't update mapping: %v", err)
 	}
 
 	req := esapi.IndicesPutMappingRequest{
@@ -33,7 +37,7 @@ func (c *client) UpdateMapping(ctx context.Context, index string, body interface
 	}
 
 	res, err := req.Do(ctx, c.esClient)
-	if err != nil {
+	if err != nil || res.IsError() {
 		return fmt.Errorf("error updating ES index mapping: %v", err)
 	}
 

@@ -40,7 +40,7 @@ func main() {
 		log.Fatalf("cannot initialise sns client %v", err)
 	}
 
-	service := processor.NewService(zenserpClient, ddbrepository, snsClient)
+	service := processor.NewService(zenserpClient, ddbrepository, snsClient, nil)
 
 	lambda.Start(service.ProcessKeyword)
 }

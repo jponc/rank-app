@@ -47,16 +47,6 @@ functions:
           path: /hello
           method: post
 
-  DownloadLatestCSV:
-    handler: bin/DownloadLatestCSV
-    timeout: 30
-    events:
-      - http:
-          path: /download-latest-csv
-          method: get
-    environment:
-      S3_BUCKET_NAME: ${self:custom.env.S3_BUCKET_NAME}
-
   # == CRON ==
   RunCrawl:
     handler: bin/RunCrawl
@@ -65,15 +55,6 @@ functions:
     environment:
       SNS_PREFIX: ${self:custom.env.SNS_PREFIX}
       KEYWORDS: ${self:custom.env.KEYWORDS}
-
-  UpdateLatestCSV:
-    handler: bin/UpdateLatestCSV
-    timeout: 120
-    events:
-      - schedule: cron(0 11 * * ? *)
-    environment:
-      S3_BUCKET_NAME: ${self:custom.env.S3_BUCKET_NAME}
-      DB_TABLE_NAME: ${self:custom.env.DB_TABLE_NAME}
 
   # == SNS ==
   ProcessKeyword:
@@ -86,12 +67,12 @@ functions:
       DB_TABLE_NAME: ${self:custom.env.DB_TABLE_NAME}
       SNS_PREFIX: ${self:custom.env.SNS_PREFIX}
 
-  AddCrawlResultToLatest:
-    handler: bin/AddCrawlResultToLatest
+  AddResultItemToES:
+    handler: bin/AddResultItemToES
     events:
-      - sns: ${self:service}-${self:provider.stage}-CrawlResultCreated
+      - sns: ${self:service}-${self:provider.stage}-ResultItemCreated
     environment:
-      DB_TABLE_NAME: ${self:custom.env.DB_TABLE_NAME}
+      ELASTICSEARCH_URL: ${self:custom.env.ELASTICSEARCH_URL}
 
   # == ADHOC FUNCTONS ==
   UpdateResultItemIndexMapping:

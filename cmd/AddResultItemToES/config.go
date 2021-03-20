@@ -5,10 +5,10 @@ import (
 	"os"
 )
 
-// Config
+// Config holds all configuration related to zenserp
 type Config struct {
-	AWSRegion    string
-	S3BucketName string
+	AWSRegion        string
+	ElasticsearchURL string
 }
 
 // NewConfig initialises a new config
@@ -18,14 +18,14 @@ func NewConfig() (*Config, error) {
 		return nil, err
 	}
 
-	s3BucketName, err := getEnv("S3_BUCKET_NAME")
+	elasticsearchUrl, err := getEnv("ELASTICSEARCH_URL")
 	if err != nil {
 		return nil, err
 	}
 
 	return &Config{
-		AWSRegion:    awsRegion,
-		S3BucketName: s3BucketName,
+		AWSRegion:        awsRegion,
+		ElasticsearchURL: elasticsearchUrl,
 	}, nil
 }
 

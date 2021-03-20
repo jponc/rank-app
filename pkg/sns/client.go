@@ -1,6 +1,7 @@
 package sns
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -8,13 +9,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
 	awsSns "github.com/aws/aws-sdk-go/service/sns"
+	"github.com/aws/aws-xray-sdk-go/xray"
 	log "github.com/sirupsen/logrus"
 )
 
 // Client interface
 type Client interface {
 	// Publish publishes a new message to a SNS topic
-	Publish(topic string, message interface{}) error
+	Publish(ctx context.Context, topic string, message interface{}) error
 }
 
 type client struct {
@@ -33,6 +35,7 @@ func NewClient(awsRegion, snsPrefix string) (Client, error) {
 	}
 
 	awsSnsClient := sns.New(sess)
+	xray.AWS(awsSnsClient.Client)
 
 	c := &client{
 		awsSnsClient: awsSnsClient,
@@ -42,7 +45,7 @@ func NewClient(awsRegion, snsPrefix string) (Client, error) {
 	return c, nil
 }
 
-func (c *client) Publish(topic string, message interface{}) error {
+func (c *client) Publish(ctx context.Context, topic string, message interface{}) error {
 	msg, err := json.Marshal(message)
 	if err != nil {
 		return fmt.Errorf("failed to marshal sns message: %v", err)
@@ -53,7 +56,7 @@ func (c *client) Publish(topic string, message interface{}) error {
 		TopicArn: aws.String(fmt.Sprintf("%s-%s", c.snsPrefix, topic)),
 	}
 
-	result, err := c.awsSnsClient.Publish(input)
+	result, err := c.awsSnsClient.PublishWithContext(ctx, input)
 	if err != nil {
 		return fmt.Errorf("failed to publish to sns: %v", err)
 	}

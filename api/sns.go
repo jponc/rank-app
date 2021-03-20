@@ -3,8 +3,8 @@ package api
 import "github.com/jponc/rank-app/internal/types"
 
 const (
-	ProcessKeyword     string = "ProcessKeyword"
-	CrawlResultCreated string = "CrawlResultCreated"
+	ProcessKeyword    string = "ProcessKeyword"
+	ResultItemCreated string = "ResultItemCreated"
 )
 
 type ProcessKeywordMessage struct {
@@ -14,6 +14,6 @@ type ProcessKeywordMessage struct {
 	Count        int    `json:"count"`
 }
 
-type CrawlResultCreatedMessage struct {
-	CrawlResult types.CrawlResult `json:"crawl_result"`
+type ResultItemCreatedMessage struct {
+	ResultItem types.ResultItem `json:"result_item"`
 }

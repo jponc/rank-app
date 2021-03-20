@@ -46,7 +46,7 @@ func (s *service) RunCrawl(ctx context.Context) {
 			SearchEngine: "google.com",
 			Count:        100,
 		}
-		err := s.snsClient.Publish(api.ProcessKeyword, msg)
+		err := s.snsClient.Publish(ctx, api.ProcessKeyword, msg)
 
 		if err != nil {
 			allErr = fmt.Errorf("%w; %v", allErr, err)

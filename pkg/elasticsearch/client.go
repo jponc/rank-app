@@ -18,6 +18,8 @@ type Client interface {
 	IndexExists(ctx context.Context, index string) (*bool, error)
 	// CreateIndex creates an ES index
 	CreateIndex(ctx context.Context, index string) error
+	// Index indexes an ES document
+	Index(ctx context.Context, index, id string, body interface{}) error
 }
 
 type client struct {

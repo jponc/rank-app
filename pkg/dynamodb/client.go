@@ -1,11 +1,13 @@
 package dynamodb
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-xray-sdk-go/xray"
 )
 
 // Client interface
@@ -13,13 +15,13 @@ type Client interface {
 	// GetTableName gets the table name
 	GetTableName() string
 	// Scan scans the dynamodb table
-	Scan(input *dynamodb.ScanInput) (*dynamodb.ScanOutput, error)
+	Scan(ctx context.Context, input *dynamodb.ScanInput) (*dynamodb.ScanOutput, error)
 	// PutItem puts a new item in dynamodb table
-	PutItem(input *dynamodb.PutItemInput) (*dynamodb.PutItemOutput, error)
+	PutItem(ctx context.Context, input *dynamodb.PutItemInput) (*dynamodb.PutItemOutput, error)
 	// BatchWriteItem writes multiple items to dynamodb table
-	BatchWriteItem(input *dynamodb.BatchWriteItemInput) (*dynamodb.BatchWriteItemOutput, error)
+	BatchWriteItem(ctx context.Context, input *dynamodb.BatchWriteItemInput) (*dynamodb.BatchWriteItemOutput, error)
 	// Query queries dynamodb based on keys
-	Query(input *dynamodb.QueryInput) (*dynamodb.QueryOutput, error)
+	Query(ctx context.Context, input *dynamodb.QueryInput) (*dynamodb.QueryOutput, error)
 }
 
 type client struct {
@@ -38,6 +40,7 @@ func NewClient(awsRegion, tableName string) (Client, error) {
 	}
 
 	dynamodbClient := dynamodb.New(sess)
+	xray.AWS(dynamodbClient.Client)
 
 	c := &client{
 		dynamodbClient: dynamodbClient,
@@ -47,20 +50,20 @@ func NewClient(awsRegion, tableName string) (Client, error) {
 	return c, nil
 }
 
-func (c *client) Scan(input *dynamodb.ScanInput) (*dynamodb.ScanOutput, error) {
-	return c.dynamodbClient.Scan(input)
+func (c *client) Scan(ctx context.Context, input *dynamodb.ScanInput) (*dynamodb.ScanOutput, error) {
+	return c.dynamodbClient.ScanWithContext(ctx, input)
 }
 
-func (c *client) PutItem(input *dynamodb.PutItemInput) (*dynamodb.PutItemOutput, error) {
-	return c.dynamodbClient.PutItem(input)
+func (c *client) PutItem(ctx context.Context, input *dynamodb.PutItemInput) (*dynamodb.PutItemOutput, error) {
+	return c.dynamodbClient.PutItemWithContext(ctx, input)
 }
 
-func (c *client) BatchWriteItem(input *dynamodb.BatchWriteItemInput) (*dynamodb.BatchWriteItemOutput, error) {
-	return c.dynamodbClient.BatchWriteItem(input)
+func (c *client) BatchWriteItem(ctx context.Context, input *dynamodb.BatchWriteItemInput) (*dynamodb.BatchWriteItemOutput, error) {
+	return c.dynamodbClient.BatchWriteItemWithContext(ctx, input)
 }
 
-func (c *client) Query(input *dynamodb.QueryInput) (*dynamodb.QueryOutput, error) {
-	return c.dynamodbClient.Query(input)
+func (c *client) Query(ctx context.Context, input *dynamodb.QueryInput) (*dynamodb.QueryOutput, error) {
+	return c.dynamodbClient.QueryWithContext(ctx, input)
 }
 
 func (c *client) GetTableName() string {
